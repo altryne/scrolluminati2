@@ -16,7 +16,7 @@ document.documentElement.classList.add('js')
 // const images = document.querySelectorAll('img:not([src*="https://tympanus.net/codrops/wp-content/banners/"])')
 let imagesIndex = 0
 let url = 'https://illuminati.mypinata.cloud/ipfs/QmSnTNBFv8bK8q5t3Gi3TJkZeXbotu9YJSVQ5XTFFbGbhD/'
-let thumb_url = 'https://images.raritysniffer.com/500/500/ipfs/'
+let thumb_url = 'https://images.raritysniffer.com/800/800/ipfs/'
 
 
 
@@ -96,6 +96,20 @@ async function start(){
   } catch (error) {
     console.error('Something went terribly wrong') 
   }
+  //if there are less than 12 images, add up to 12 from array and randomize
+  
+  if(images.length < 12){
+    let randomNumbers = [];
+    for(let i = 0; i < 11; i++){
+      randomNumbers.push(Math.floor(Math.random() * images.length))
+    }
+    for(let i = 0; i < randomNumbers.length; i++){
+      images.push(images[randomNumbers[i]])
+    }
+  }
+
+    
+
   
   
   images.forEach(res => {
