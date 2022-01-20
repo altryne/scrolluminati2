@@ -41,31 +41,51 @@ document.querySelector('#disconnect').onclick = logOut
 
 async function init(){
   let user = Moralis.User.current();
-  if(user){
-    connected(user)
+  let urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.has('wallet')){
+    connected(urlParams.get('wallet'))
+  }else if(urlParams.has('ens')){
+    const web3Provider = await Moralis.enableWeb3();
+    const web3 = new Web3(web3Provider)
+    const address = await web3.eth.ens.getOwner(urlParams.get('ens'));
+    connected(address)
+  }else if(user){
+    connected(user.get("ethAddress"))
   }else{
     start() 
   }}
   
 init()
 
-async function connected(user){
+async function connected(wallet_id){
   document.querySelector('#connect_wallet').style.display = 'none'
   document.querySelector('#wallet_address').style.display = 'block'
-  document.querySelector('#wallet').innerHTML = user.get("ethAddress")
-  let ens = await Moralis.Web3API.resolve.resolveAddress();
-  if(ens && ens.name){
+  document.querySelector('#wallet').innerHTML = wallet_id
+  let options = {address: wallet_id };
+  try {
+    let ens = await Moralis.Web3API.resolve.resolveAddress(options);
+    if(ens && ens.name){
+      document.querySelector('#wallet').innerHTML = ens.name
+      document.querySelector('.demo-1__title').innerHTML = ens.name
+    }  
+  } catch (error) {
     
-    document.querySelector('#wallet').innerHTML = ens.name
-    document.querySelector('.demo-1__title').innerHTML = ens.name
   }
-  getNFTs(user)
+  
+  getNFTs(wallet_id)
 }
 
-async function getNFTs(user){
-  const userEthNFTs = await Moralis.Web3.getNFTs();
-  window.connectedNFTs = userEthNFTs.filter(nft => nft.token_address === '0x26badf693f2b103b021c670c852262b379bbbe8a')
-  console.log('found these pyramids', window.connectedNFTs)
+async function getNFTs(wallet_id){
+  try {
+    const userEthNFTs = await Moralis.Web3API.account.getNFTsForContract({
+      address: wallet_id,
+      token_address: '0x26badf693f2b103b021c670c852262b379bbbe8a'
+    })
+    window.connectedNFTs = userEthNFTs.result  
+  } catch (error) {
+    
+  }
+  
   start() 
 }
 
@@ -73,8 +93,20 @@ async function start(){
   let requests = []
   let images = []
   if(window.connectedNFTs && window.connectedNFTs.length){
-     requests = window.connectedNFTs.map(nft => {return fetch(nft.token_uri)})
-  }else{
+     requests = window.connectedNFTs.map(nft => {return fetch(url + nft.token_id)})
+     if(window.connectedNFTs.length > 12){
+        let randomNumbers = [];
+        let filtered_requests = [];
+        for(let i = 0; i < 12; i++){
+          randomNumbers.push(Math.floor(Math.random() * requests.length))
+        }
+        for(let i = 0; i < randomNumbers.length; i++){
+          filtered_requests.push(requests[randomNumbers[i]])
+        }
+        requests = filtered_requests
+      }
+      console.log(requests)
+    }else{
     let randomNumbers = [];
     for(let i = 0; i < 12; i++){
       randomNumbers.push(Math.floor(Math.random() * 8127))
@@ -100,7 +132,7 @@ async function start(){
   
   if(images.length < 12){
     let randomNumbers = [];
-    for(let i = 0; i < 11; i++){
+    for(let i = 0; i < 12 - images.length ; i++){
       randomNumbers.push(Math.floor(Math.random() * images.length))
     }
     for(let i = 0; i < randomNumbers.length; i++){
@@ -108,10 +140,6 @@ async function start(){
     }
   }
 
-    
-
-  
-  
   images.forEach(res => {
     const img = new Image()
 

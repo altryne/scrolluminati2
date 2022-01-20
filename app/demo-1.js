@@ -41,8 +41,18 @@ export default class App {
     })
 
     this.gl = this.renderer.gl
-
+    try {
+      document.body.removeChild(document.querySelector('canvas'))  
+    } catch (error) {
+      
+    }
+    
     document.body.appendChild(this.gl.canvas)
+  }
+  destroyRenderer () {
+    this.renderer.destroy()
+    //delete canvas element from dom
+    document.body.removeChild(this.gl.canvas)
   }
 
   createCamera () {
