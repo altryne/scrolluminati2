@@ -48,23 +48,20 @@ async function init(){
   }else if(urlParams.has('id')){
     const options = { address: illuminati_contract_address, token_id: urlParams.get('id'), chain: "eth" };
     const tokenIdOwners = await Moralis.Web3API.token.getTokenIdOwners(options);
-    console.log(tokenIdOwners)
     window.singleNftId = urlParams.get('id')
     await connected(tokenIdOwners.result[0].owner_of)
     document.querySelector('.demo-1__title').innerHTML = `${tokenIdOwners.result[0].name} #${tokenIdOwners.result[0].token_id}`
-    start()
   }else if(urlParams.has('ens')){
     const web3Provider = await Moralis.enableWeb3();
     const web3 = new Web3(web3Provider)
     const address = await web3.eth.ens.getOwner(urlParams.get('ens'));
     connected(address)
-    getNFTs(address)
   }else if(user){
     connected(user.get("ethAddress"))
-    getNFTs(user.get("ethAddress"))
   }else{
     start() 
-  }}
+  }
+}
   
 init()
 
@@ -82,7 +79,7 @@ async function connected(wallet_id){
   } catch (error) {
     
   }
-  
+  getNFTs(wallet_id)
 }
 
 
@@ -97,6 +94,14 @@ async function getNFTs(wallet_id){
   } catch (error) {
     
   }
+  let total_showing = window.connectedNFTs.length
+  let showing_num = (window.singleNftId) ? 1 : (total_showing > 12) ? 12 : total_showing
+  document.querySelector('#length').innerHTML = showing_num
+  document.querySelector('#total').innerHTML = total_showing
+  if(showing_num < total_showing){
+    document.querySelector('#show_wallet').style.display = 'block'
+    document.querySelector('#show_wallet').href = `${window.location.protocol}//${window.location.host}?wallet=${wallet_id}`
+  }
   
   start() 
 }
@@ -104,7 +109,10 @@ async function getNFTs(wallet_id){
 async function start(){
   let requests = []
   let images = []
-  if(window.connectedNFTs && window.connectedNFTs.length){
+  if(window.singleNftId){
+    requests = [fetch(url + window.singleNftId)]
+  }
+  else if(window.connectedNFTs && window.connectedNFTs.length){
      requests = window.connectedNFTs.map(nft => {return fetch(url + nft.token_id)})
      if(window.connectedNFTs.length > 12){
         let randomNumbers = [];
@@ -117,8 +125,6 @@ async function start(){
         }
         requests = filtered_requests
       }
-  }else if(window.singleNftId){
-    requests = [fetch(url + window.singleNftId)]
   }else{
     let randomNumbers = [];
     for(let i = 0; i < 12; i++){

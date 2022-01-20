@@ -17,11 +17,18 @@
         <div class="frame__title-wrap">
           <div id="connect_wallet">
             <h1 class="frame__title">Connect wallet to show your pyramids</h1>
-            <p class="frame__tagline"><a  id="connect">Connect with Web3</a></p>
+            <p class="frame__tagline"><a id="refresh" href="/">Randomize</a> or <a  id="connect">Connect with Web3</a></p>
           </div>
           <div id="wallet_address" style="display: none;">
-            <h1 class="frame__title" id="wallet"></h1>
-            <p class="frame__tagline"><a  id="disconnect">Disconnect</a></p>
+            <h1 class="frame__title"><span class="frame__title" id="wallet"></span>
+              &nbsp; (showing <span class="frame__title" id="length"></span> out of <span class="frame__title" id="total"></span>)
+            </h1>
+            <p class="frame__tagline">
+              
+            <a id="show_wallet" style="display: none;">Show Wallet</a>
+            <a id="refresh" href="/">Randomize</a>
+            <a  id="disconnect">Disconnect</a>
+          </p>
           </div>
         </div>
         <div class="frame__links">
