@@ -5,6 +5,7 @@ import Moralis from 'moralis';
 
 const serverUrl = "https://oqwxgtkiflrz.usemoralis.com:2053/server";
 const appId = "nsRkwNGljvOddDMGUmg4x5g60DX94d54XxLrifkf";
+const illuminati_contract_address = '0x26badf693f2b103b021c670c852262b379bbbe8a';
 Moralis.start({ serverUrl, appId });
 
 
@@ -44,13 +45,23 @@ async function init(){
   let urlParams = new URLSearchParams(window.location.search);
   if(urlParams.has('wallet')){
     connected(urlParams.get('wallet'))
+  }else if(urlParams.has('id')){
+    const options = { address: illuminati_contract_address, token_id: urlParams.get('id'), chain: "eth" };
+    const tokenIdOwners = await Moralis.Web3API.token.getTokenIdOwners(options);
+    console.log(tokenIdOwners)
+    window.singleNftId = urlParams.get('id')
+    await connected(tokenIdOwners.result[0].owner_of)
+    document.querySelector('.demo-1__title').innerHTML = `${tokenIdOwners.result[0].name} #${tokenIdOwners.result[0].token_id}`
+    start()
   }else if(urlParams.has('ens')){
     const web3Provider = await Moralis.enableWeb3();
     const web3 = new Web3(web3Provider)
     const address = await web3.eth.ens.getOwner(urlParams.get('ens'));
     connected(address)
+    getNFTs(address)
   }else if(user){
     connected(user.get("ethAddress"))
+    getNFTs(user.get("ethAddress"))
   }else{
     start() 
   }}
@@ -72,16 +83,17 @@ async function connected(wallet_id){
     
   }
   
-  getNFTs(wallet_id)
 }
+
 
 async function getNFTs(wallet_id){
   try {
     const userEthNFTs = await Moralis.Web3API.account.getNFTsForContract({
       address: wallet_id,
-      token_address: '0x26badf693f2b103b021c670c852262b379bbbe8a'
+      token_address: illuminati_contract_address
     })
-    window.connectedNFTs = userEthNFTs.result  
+    window.connectedNFTs = userEthNFTs.result
+    console.log(userEthNFTs.result)  
   } catch (error) {
     
   }
@@ -105,8 +117,9 @@ async function start(){
         }
         requests = filtered_requests
       }
-      console.log(requests)
-    }else{
+  }else if(window.singleNftId){
+    requests = [fetch(url + window.singleNftId)]
+  }else{
     let randomNumbers = [];
     for(let i = 0; i < 12; i++){
       randomNumbers.push(Math.floor(Math.random() * 8127))
